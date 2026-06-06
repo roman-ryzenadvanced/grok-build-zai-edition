@@ -1,0 +1,93 @@
+[cli]
+installer = "internal"
+
+[models]
+default = "zai-glm-5.1"
+
+[model.zai-glm-5.1]
+model = "glm-5.1"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+name = "z.ai GLM-5.1"
+description = "z.ai GLM-5.1 model — general coding and complex tasks"
+api_key = "your-zai-api-key-here"
+temperature = 0.7
+top_p = 0.95
+max_completion_tokens = 8192
+context_window = 128000
+
+[model.zai-glm-5]
+model = "glm-5"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+name = "z.ai GLM-5"
+description = "z.ai GLM-5 model — balanced performance"
+api_key = "your-zai-api-key-here"
+temperature = 0.7
+top_p = 0.95
+max_completion_tokens = 8192
+context_window = 128000
+
+[model.zai-glm-5-turbo]
+model = "glm-5-turbo"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+name = "z.ai GLM-5 Turbo"
+description = "z.ai GLM-5 Turbo model — fast responses"
+api_key = "your-zai-api-key-here"
+temperature = 0.7
+top_p = 0.95
+max_completion_tokens = 8192
+context_window = 128000
+
+[model.zai-glm-5v-turbo]
+model = "glm-5v-turbo"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+name = "z.ai GLM-5V Turbo"
+description = "z.ai GLM-5V Turbo model — multimodal with vision"
+api_key = "your-zai-api-key-here"
+temperature = 0.7
+top_p = 0.95
+max_completion_tokens = 8192
+context_window = 128000
+
+[model.zai-glm-4.7]
+model = "glm-4.7"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+name = "z.ai GLM-4.7"
+description = "z.ai GLM-4.7 model — stable and reliable"
+api_key = "your-zai-api-key-here"
+temperature = 0.7
+top_p = 0.95
+max_completion_tokens = 8192
+context_window = 128000
+
+[model.zai-glm-4.7-flash]
+model = "glm-4.7-flash"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+name = "z.ai GLM-4.7 Flash"
+description = "z.ai GLM-4.7 Flash model — ultra-fast"
+api_key = "your-zai-api-key-here"
+temperature = 0.7
+top_p = 0.95
+max_completion_tokens = 8192
+context_window = 128000
+
+[model.zai-glm-4.6v]
+model = "glm-4.6v"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+name = "z.ai GLM-4.6V"
+description = "z.ai GLM-4.6V model — vision and multimodal"
+api_key = "your-zai-api-key-here"
+temperature = 0.7
+top_p = 0.95
+max_completion_tokens = 8192
+context_window = 128000
+
+[model.zai-glm-5.2]
+model = "glm-5.2"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+name = "z.ai GLM-5.2"
+description = "z.ai GLM-5.2 model — latest, best performance"
+api_key = "your-zai-api-key-here"
+temperature = 0.7
+top_p = 0.95
+max_completion_tokens = 8192
+context_window = 128000
