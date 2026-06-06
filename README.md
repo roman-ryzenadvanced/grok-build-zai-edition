@@ -188,6 +188,6 @@ This project is **not affiliated with** xAI or Grok Build. It is a community con
 
 **[Get 10% OFF Z.ai with code ROK78RJKNW](https://z.ai/subscribe?ic=ROK78RJKNW)**
 
-Made with care by [Roman](https://github.com/roman-ryzenadvanced)
+Made with care by [Rommark.Dev](https://github.com/roman-ryzenadvanced)
 
 </div>
