@@ -10,7 +10,7 @@
 [![Models](https://img.shields.io/badge/models-8%20GLM-orange.svg?style=for-the-badge&logo=openai)](docs/models.md)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg?style=for-the-badge&logo=linux)](#installation)
 
-Unlock the full power of your **Grok Build CLI** using **Z.ai’s state-of-the-art GLM models**. Bypass expensive default subscriptions and leverage custom coding plans locally.
+Unlock the full power of your **Grok Build CLI** using **ANY OpenAI-compatible AI provider** (such as DeepSeek, Anthropic, or local LLMs like Ollama), or take advantage of our perfectly tuned **Z.ai’s state-of-the-art GLM models**. Bypass expensive default subscriptions and leverage custom coding plans locally.
 
 ---
 
@@ -39,9 +39,11 @@ By taking advantage of Z.ai's OpenAI-compatible API endpoints, you get state-of-
 
 ---
 
-## ⚡ Supported Models
+## ⚡ Supported Models & Custom AI Providers
 
-Z.ai provides a variety of cutting-edge GLM models for all your programming needs. Here is what's fully supported out of the box:
+**You are not locked into one ecosystem!** While this edition is perfectly tuned for Z.ai out-of-the-box, you can seamlessly connect **ANY OpenAI-compatible AI provider** (such as DeepSeek, Anthropic via proxies, local LM Studio, or Ollama) just by changing the `base_url` and `api_key` in your configuration.
+
+For our primary Z.ai integration, here are the cutting-edge GLM models supported:
 
 | Model ID | Name | Best For |
 | :--- | :--- | :--- |
