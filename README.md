@@ -25,7 +25,7 @@
 
 ## What is This?
 
-**Grok Build Z.ai Edition** is a pre-configured setup that enables the Grok Build CLI to work with **Z.ai's GLM models** — a powerful alternative to x.ai's default models. This configuration provides access to 8 state-of-the-art GLM models via Z.ai's OpenAI-compatible API endpoint, without requiring an x.ai subscription for AI inference.
+**Grok Build Z Edition** is a pre-configured setup that enables the Grok Build CLI to work with **custom AI providers and custom coding plans such as Z.ai's GLM models** — a powerful alternative to x.ai's default models. This configuration provides access to state-of-the-art GLM models via Z.ai's OpenAI-compatible API endpoint, without requiring an x.ai subscription for AI inference.
 
 ## Supported Models
 
@@ -38,14 +38,13 @@
 | `glm-4.7` | GLM-4.7 | Stable, reliable coding |
 | `glm-4.7-flash` | GLM-4.7 Flash | Ultra-fast, lightweight tasks |
 | `glm-4.6v` | GLM-4.6V | Vision and multimodal |
-| `glm-5.2` | GLM-5.2 | Latest, best performance |
 
 ## Installation
 
 ### Prerequisites
 
 - Grok Build CLI installed (`~/.grok/downloads/grok-linux-x86_64` or equivalent)
-- Z.ai API token ([get one with 10% OFF](https://z.ai/subscribe?ic=ROK78RJKNW))
+- Configure your custom AI provider endpoint/token/model
 - Bash shell (Linux/macOS) or Git Bash (Windows)
 
 ### Quick Install
