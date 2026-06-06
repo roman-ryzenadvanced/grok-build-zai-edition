@@ -14,13 +14,21 @@ Unlock the full power of your **Grok Build CLI** using **ANY OpenAI-compatible A
 
 ---
 
-### 🔥 Get 10% OFF Z.ai Coding Plans!
-**Use invite code: `ROK78RJKNW`**
+<br>
+<table align="center">
+  <tr>
+    <td align="center" width="9999">
+      <h3>🔥 Unlock 10% OFF Z.ai Coding Plans! 🔥</h3>
+      <p>Supercharge your Grok Build CLI with ultra-fast, premium GLM models at a discount.</p>
+      <p>Use Invite Code: <b><code>ROK78RJKNW</code></b></p>
+      <a href="https://z.ai/subscribe?ic=ROK78RJKNW">
+        <img src="https://img.shields.io/badge/Subscribe%20&%20Save%2010%25-Click%20Here-9333ea?style=for-the-badge&logo=zapier&logoColor=white" alt="Subscribe to Z.ai" />
+      </a>
+    </td>
+  </tr>
+</table>
+<br>
 
-[![Subscribe to Z.ai](https://img.shields.io/badge/Z.ai%20Subscribe-10%25%20OFF-9333ea?style=for-the-badge&logo=zapier&logoColor=white)](https://z.ai/subscribe?ic=ROK78RJKNW)
-**[Click here to subscribe and save 10% on your Z.ai coding plan!](https://z.ai/subscribe?ic=ROK78RJKNW)**
-
----
 
 </div>
 
