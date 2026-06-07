@@ -1,11 +1,14 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export interface Session {
   id: string;
-  path: string;
+  workspace: string;
   modified: string;
   size: number;
+  messageCount: number;
+  lastMessage: string;
+  title: string;
 }
 
 interface UseSessionsReturn {
@@ -18,9 +21,9 @@ interface UseSessionsReturn {
 export function useSessions(): UseSessionsReturn {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
     try {
       const res = await fetch("/api/grok-sessions");
       if (res.ok) {
@@ -51,6 +54,16 @@ export function useSessions(): UseSessionsReturn {
 
   useEffect(() => {
     refresh();
+  }, [refresh]);
+
+  // Auto-refresh every 5 seconds to sync with Grok CLI
+  useEffect(() => {
+    intervalRef.current = setInterval(refresh, 5000);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, [refresh]);
 
   return { sessions, loading, refresh, deleteSession };

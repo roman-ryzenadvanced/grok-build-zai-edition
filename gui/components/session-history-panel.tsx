@@ -9,6 +9,7 @@ interface SessionHistoryPanelProps {
   loading: boolean;
   currentSessionId: string;
   onResumeSession: (sessionId: string) => void;
+  onViewSession: (sessionId: string, workspace: string) => void;
   onDeleteSession: (id: string) => void;
   onRefresh: () => void;
 }
@@ -34,6 +35,7 @@ export default function SessionHistoryPanel({
   loading,
   currentSessionId,
   onResumeSession,
+  onViewSession,
   onDeleteSession,
   onRefresh,
 }: SessionHistoryPanelProps) {
@@ -46,7 +48,9 @@ export default function SessionHistoryPanel({
     return sessions.filter(
       (s) =>
         s.id.toLowerCase().includes(q) ||
-        s.path.toLowerCase().includes(q)
+        s.title.toLowerCase().includes(q) ||
+        s.workspace.toLowerCase().includes(q) ||
+        s.lastMessage.toLowerCase().includes(q)
     );
   }, [sessions, search]);
 
@@ -90,26 +94,46 @@ export default function SessionHistoryPanel({
         ) : (
           filtered.map((session) => (
             <div
-              key={session.id}
+              key={`${session.workspace}-${session.id}`}
               className={`session-card ${
                 currentSessionId === session.id ? "session-card-active" : ""
               }`}
-              onClick={() => onResumeSession(session.id)}
+              onClick={() => onViewSession(session.id, session.workspace)}
             >
               <div className="session-card-content">
                 <div className="session-card-title">
-                  {(() => {
-                    const decoded = (() => {
-                      try { return decodeURIComponent(session.id); } catch { return session.id; }
-                    })();
-                    return decoded.length > 32 ? decoded.substring(0, 32) + "..." : decoded;
-                  })()}
+                  {session.title || session.id.substring(0, 24)}
+                </div>
+                <div className="session-card-workspace">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                  </svg>
+                  <span>{session.workspace}</span>
                 </div>
                 <div className="session-card-meta">
                   <span>{relativeTime(session.modified)}</span>
+                  <span className="session-card-sep">&middot;</span>
+                  <span>{session.messageCount} msgs</span>
                 </div>
+                {session.lastMessage && (
+                  <div className="session-card-preview">
+                    {session.lastMessage.substring(0, 80)}{session.lastMessage.length > 80 ? "..." : ""}
+                  </div>
+                )}
               </div>
               <div className="session-card-actions">
+                <button
+                  className="session-card-continue"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onResumeSession(session.id);
+                  }}
+                  title="Continue session"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                </button>
                 {deleteConfirm === session.id ? (
                   <div className="session-delete-confirm">
                     <button
@@ -153,7 +177,7 @@ export default function SessionHistoryPanel({
       </div>
 
       <div className="session-history-footer">
-        <span className="session-count">{sessions.length} sessions</span>
+        <span className="session-count">{sessions.length} sessions &middot; auto-syncing</span>
       </div>
     </div>
   );

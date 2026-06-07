@@ -16,6 +16,7 @@ import { useConnectionStatus } from "@/hooks/use-connection-status";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useSettings } from "@/hooks/use-settings";
 import { useSessions } from "@/hooks/use-sessions";
+import ChatHistoryViewer from "@/components/chat-history-viewer";
 
 function downloadBlob(content: string, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType });
@@ -35,6 +36,7 @@ export default function Home() {
   const { cwd, setCwd } = useCwd();
   const [sessionKey, setSessionKey] = useState(() => uuidv4());
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [viewingSession, setViewingSession] = useState<{ id: string; workspace: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { status: connectionStatus, latency } = useConnectionStatus();
@@ -59,7 +61,12 @@ export default function Home() {
   const handleResumeSession = useCallback((sessionId: string) => {
     // Set the session key to the resumed session ID so the CLI uses -s <sessionId>
     setSessionKey(sessionId);
+    setViewingSession(null);
     setHistoryOpen(false);
+  }, []);
+
+  const handleViewSession = useCallback((sessionId: string, workspace: string) => {
+    setViewingSession({ id: sessionId, workspace });
   }, []);
 
   const handleCloseAll = useCallback(() => {
@@ -149,18 +156,30 @@ export default function Home() {
               loading={sessionsLoading}
               currentSessionId={sessionKey}
               onResumeSession={handleResumeSession}
+              onViewSession={handleViewSession}
               onDeleteSession={deleteSession}
               onRefresh={refreshSessions}
             />
-            <div className="sidebar-container">
-              <CopilotSidebar
-                key={`sidebar-${sessionKey}`}
-                labels={chatLabels}
-                defaultOpen={true}
-                AssistantMessage={CustomAssistantMessage}
-                instructions={settings.systemPrompt || undefined}
-              />
-            </div>
+            {viewingSession ? (
+              <div className="sidebar-container">
+                <ChatHistoryViewer
+                  sessionId={viewingSession.id}
+                  workspace={viewingSession.workspace}
+                  onClose={() => setViewingSession(null)}
+                  onContinue={() => handleResumeSession(viewingSession.id)}
+                />
+              </div>
+            ) : (
+              <div className="sidebar-container">
+                <CopilotSidebar
+                  key={`sidebar-${sessionKey}`}
+                  labels={chatLabels}
+                  defaultOpen={true}
+                  AssistantMessage={CustomAssistantMessage}
+                  instructions={settings.systemPrompt || undefined}
+                />
+              </div>
+            )}
           </>
         )}
 
