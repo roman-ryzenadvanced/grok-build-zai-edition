@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { CopilotChat } from "@copilotkit/react-ui";
-import { useCoAgent } from "@copilotkit/react-core";
+import { useCoAgent, useCopilotChatInternal } from "@copilotkit/react-core";
 import { v4 as uuidv4 } from "uuid";
 import Toolbar from "@/components/toolbar";
 import StatusBar from "@/components/status-bar";
@@ -42,67 +42,6 @@ function downloadBlob(content: string, filename: string, mimeType: string) {
   URL.revokeObjectURL(url);
 }
 
-/** Renders the resumed session history as a scrollable block */
-function ResumedHistoryBlock({
-  messages,
-  onDismiss,
-  scrollRef,
-  compact,
-}: {
-  messages: ResumedHistoryMessage[];
-  onDismiss: () => void;
-  scrollRef: React.RefObject<HTMLDivElement | null>;
-  compact?: boolean;
-}) {
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, scrollRef]);
-
-  return (
-    <div className={`resumed-history-container${compact ? " fullscreen-history" : ""}`} ref={scrollRef}>
-      <div className="resumed-history-header">
-        <span className="resumed-history-label">
-          Session resumed &middot; {messages.length} messages
-        </span>
-        <button className="resumed-history-dismiss" onClick={onDismiss} title="Hide history">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-      <div className="resumed-history-messages">
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`resumed-history-msg resumed-history-msg-${msg.role}`}>
-            <div className="resumed-history-msg-avatar">
-              {msg.role === "user" ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-              )}
-            </div>
-            <div className="resumed-history-msg-body">
-              <div className="resumed-history-msg-role">
-                {msg.role === "user" ? "You" : "Grok Build"}
-              </div>
-              <div className="resumed-history-msg-content">{msg.content}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="resumed-history-divider">
-        <span>Continue conversation below</span>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   const { models, selectedModel, setSelectedModel, loading } = useModels();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
@@ -113,13 +52,16 @@ export default function Home() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [resumedSession, setResumedSession] = useState<ResumedSession | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const historyScrollRef = useRef<HTMLDivElement>(null);
 
   const { status: connectionStatus, latency } = useConnectionStatus();
   const { settings, updateSettings, resetSettings } = useSettings();
   const { sessions, loading: sessionsLoading, refresh: refreshSessions, deleteSession } = useSessions();
 
   const coAgent = useCoAgent({ name: "default" });
+
+  // Access CopilotKit's chat state to inject history messages.
+  // useCopilotChatInternal shares context with CopilotSidebar/CopilotChat (unlike useCopilotChatHeadless_c).
+  const { setMessages } = useCopilotChatInternal();
 
   // Sync model/cwd/instructions to agent state
   useEffect(() => {
@@ -130,10 +72,29 @@ export default function Home() {
     });
   }, [selectedModel, cwd, settings.systemPrompt]);
 
+  // When resumed session history is loaded, inject it into CopilotChat's message state.
+  useEffect(() => {
+    if (resumedSession && resumedSession.messages.length > 0) {
+      // Convert to AG-UI Message format that CopilotKit understands
+      const copilotMessages = resumedSession.messages.map((msg) => ({
+        id: uuidv4(),
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+        createdAt: new Date(),
+      }));
+      // Delay to ensure CopilotSidebar/CopilotChat has mounted after sessionKey change
+      const timer = setTimeout(() => {
+        setMessages(copilotMessages);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [resumedSession, setMessages]);
+
   const handleNewSession = useCallback(() => {
     setSessionKey(uuidv4());
     setResumedSession(null);
-  }, []);
+    setMessages([]);
+  }, [setMessages]);
 
   const handleResumeSession = useCallback(async (sessionId: string) => {
     const session = sessions.find((s) => s.id === sessionId);
@@ -162,7 +123,7 @@ export default function Home() {
       setResumedSession(null);
     } finally {
       setLoadingHistory(false);
-      // Set session key last so the Grok CLI gets the right session ID for continuation
+      // Set session key LAST so CopilotChat remounts after history is ready.
       setSessionKey(sessionId);
     }
   }, [sessions, cwd]);
@@ -273,14 +234,6 @@ export default function Home() {
               </div>
             ) : (
               <div className="sidebar-container">
-                {/* Resumed session history - shown above the active chat */}
-                {resumedSession && resumedSession.messages.length > 0 && (
-                  <ResumedHistoryBlock
-                    messages={resumedSession.messages}
-                    onDismiss={() => setResumedSession(null)}
-                    scrollRef={historyScrollRef}
-                  />
-                )}
                 {loadingHistory && (
                   <div className="resumed-history-loading">
                     <div className="resumed-history-spinner">Loading session history...</div>
@@ -301,15 +254,6 @@ export default function Home() {
         <div className={`main-content ${isFullscreen ? "fullscreen" : ""}`}>
           {isFullscreen ? (
             <div className="fullscreen-chat">
-              {/* Resumed history for fullscreen mode */}
-              {resumedSession && resumedSession.messages.length > 0 && (
-                <ResumedHistoryBlock
-                  messages={resumedSession.messages}
-                  onDismiss={() => setResumedSession(null)}
-                  scrollRef={historyScrollRef}
-                  compact
-                />
-              )}
               {loadingHistory && (
                 <div className="resumed-history-loading">
                   <div className="resumed-history-spinner">Loading session history...</div>
