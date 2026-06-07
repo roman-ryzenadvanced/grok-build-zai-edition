@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { ModelInfo } from "@/hooks/use-models";
 
 interface ToolbarProps {
@@ -77,6 +78,13 @@ export default function Toolbar({
       </div>
 
       <div className="toolbar-right">
+        <Link href="/research" className="toolbar-btn" title="Research mode (/last30days)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <span className="toolbar-btn-label">Research</span>
+        </Link>
         <button className="toolbar-btn" onClick={onNewSession} title="New session (Ctrl+N)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14"/>

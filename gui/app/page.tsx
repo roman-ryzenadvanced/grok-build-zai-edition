@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { CopilotChat } from "@copilotkit/react-ui";
 import { useCoAgent } from "@copilotkit/react-core";
@@ -18,6 +18,18 @@ import { useSettings } from "@/hooks/use-settings";
 import { useSessions } from "@/hooks/use-sessions";
 import ChatHistoryViewer from "@/components/chat-history-viewer";
 
+interface ResumedHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp?: string | null;
+}
+
+interface ResumedSession {
+  sessionId: string;
+  workspace: string;
+  messages: ResumedHistoryMessage[];
+}
+
 function downloadBlob(content: string, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -30,6 +42,67 @@ function downloadBlob(content: string, filename: string, mimeType: string) {
   URL.revokeObjectURL(url);
 }
 
+/** Renders the resumed session history as a scrollable block */
+function ResumedHistoryBlock({
+  messages,
+  onDismiss,
+  scrollRef,
+  compact,
+}: {
+  messages: ResumedHistoryMessage[];
+  onDismiss: () => void;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  compact?: boolean;
+}) {
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, scrollRef]);
+
+  return (
+    <div className={`resumed-history-container${compact ? " fullscreen-history" : ""}`} ref={scrollRef}>
+      <div className="resumed-history-header">
+        <span className="resumed-history-label">
+          Session resumed &middot; {messages.length} messages
+        </span>
+        <button className="resumed-history-dismiss" onClick={onDismiss} title="Hide history">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div className="resumed-history-messages">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`resumed-history-msg resumed-history-msg-${msg.role}`}>
+            <div className="resumed-history-msg-avatar">
+              {msg.role === "user" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              )}
+            </div>
+            <div className="resumed-history-msg-body">
+              <div className="resumed-history-msg-role">
+                {msg.role === "user" ? "You" : "Grok Build"}
+              </div>
+              <div className="resumed-history-msg-content">{msg.content}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="resumed-history-divider">
+        <span>Continue conversation below</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { models, selectedModel, setSelectedModel, loading } = useModels();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
@@ -38,6 +111,9 @@ export default function Home() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [viewingSession, setViewingSession] = useState<{ id: string; workspace: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [resumedSession, setResumedSession] = useState<ResumedSession | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const historyScrollRef = useRef<HTMLDivElement>(null);
 
   const { status: connectionStatus, latency } = useConnectionStatus();
   const { settings, updateSettings, resetSettings } = useSettings();
@@ -56,14 +132,40 @@ export default function Home() {
 
   const handleNewSession = useCallback(() => {
     setSessionKey(uuidv4());
+    setResumedSession(null);
   }, []);
 
-  const handleResumeSession = useCallback((sessionId: string) => {
-    // Set the session key to the resumed session ID so the CLI uses -s <sessionId>
-    setSessionKey(sessionId);
-    setViewingSession(null);
+  const handleResumeSession = useCallback(async (sessionId: string) => {
+    const session = sessions.find((s) => s.id === sessionId);
+    const workspace = session?.workspace || cwd;
+
+    setLoadingHistory(true);
     setHistoryOpen(false);
-  }, []);
+    setViewingSession(null);
+
+    try {
+      const params = new URLSearchParams({ sessionId, workspace });
+      const res = await fetch(`/api/grok-session-history?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setResumedSession({
+          sessionId,
+          workspace,
+          messages: data.messages || [],
+        });
+      } else {
+        console.warn("Failed to load session history, resuming anyway");
+        setResumedSession(null);
+      }
+    } catch (err) {
+      console.warn("Error loading session history:", err);
+      setResumedSession(null);
+    } finally {
+      setLoadingHistory(false);
+      // Set session key last so the Grok CLI gets the right session ID for continuation
+      setSessionKey(sessionId);
+    }
+  }, [sessions, cwd]);
 
   const handleViewSession = useCallback((sessionId: string, workspace: string) => {
     setViewingSession({ id: sessionId, workspace });
@@ -171,6 +273,19 @@ export default function Home() {
               </div>
             ) : (
               <div className="sidebar-container">
+                {/* Resumed session history - shown above the active chat */}
+                {resumedSession && resumedSession.messages.length > 0 && (
+                  <ResumedHistoryBlock
+                    messages={resumedSession.messages}
+                    onDismiss={() => setResumedSession(null)}
+                    scrollRef={historyScrollRef}
+                  />
+                )}
+                {loadingHistory && (
+                  <div className="resumed-history-loading">
+                    <div className="resumed-history-spinner">Loading session history...</div>
+                  </div>
+                )}
                 <CopilotSidebar
                   key={`sidebar-${sessionKey}`}
                   labels={chatLabels}
@@ -186,6 +301,20 @@ export default function Home() {
         <div className={`main-content ${isFullscreen ? "fullscreen" : ""}`}>
           {isFullscreen ? (
             <div className="fullscreen-chat">
+              {/* Resumed history for fullscreen mode */}
+              {resumedSession && resumedSession.messages.length > 0 && (
+                <ResumedHistoryBlock
+                  messages={resumedSession.messages}
+                  onDismiss={() => setResumedSession(null)}
+                  scrollRef={historyScrollRef}
+                  compact
+                />
+              )}
+              {loadingHistory && (
+                <div className="resumed-history-loading">
+                  <div className="resumed-history-spinner">Loading session history...</div>
+                </div>
+              )}
               <CopilotChat
                 key={`chat-${sessionKey}`}
                 labels={chatLabels}
