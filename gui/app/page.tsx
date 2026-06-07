@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { CopilotChat } from "@copilotkit/react-ui";
+import { useCoAgent } from "@copilotkit/react-core";
 import { v4 as uuidv4 } from "uuid";
 import Toolbar from "@/components/toolbar";
 import StatusBar from "@/components/status-bar";
@@ -16,17 +17,18 @@ export default function Home() {
   const [sessionKey, setSessionKey] = useState(() => uuidv4());
   const [connected, setConnected] = useState(true);
 
+  // Get the agent and sync our model/cwd state to it
+  const { agent } = useCoAgent({ name: "default" });
+
+  useEffect(() => {
+    if (agent && selectedModel) {
+      agent.setState({ model: selectedModel, cwd: cwd });
+    }
+  }, [agent, selectedModel, cwd]);
+
   const handleNewSession = useCallback(() => {
     setSessionKey(uuidv4());
   }, []);
-
-  // Pass model and cwd as state to the CopilotKit agent via forwardedProps
-  const forwardedProps = {
-    state: {
-      model: selectedModel,
-      cwd: cwd,
-    },
-  };
 
   return (
     <div className="app-container">
@@ -51,7 +53,6 @@ export default function Home() {
                 initial: "Hi! I'm Grok Build powered by Z.ai. How can I help?",
               }}
               defaultOpen={true}
-              {...forwardedProps}
             />
           </div>
         )}
@@ -65,7 +66,6 @@ export default function Home() {
                   title: "Grok Build - Z.ai Edition",
                   initial: "Hi! I'm Grok Build powered by Z.ai. How can I help?",
                 }}
-                {...forwardedProps}
               />
             </div>
           ) : (
@@ -83,7 +83,7 @@ export default function Home() {
                       </svg>
                     </div>
                     <h3>{models.length} Models</h3>
-                    <p>GLM-5.1, GLM-5, GLM-5 Turbo, GLM-5V Turbo, and more</p>
+                    <p>GLM-5, GLM-5 Turbo, GLM-5V Turbo, and more</p>
                   </div>
                   <div className="info-card">
                     <div className="info-icon">

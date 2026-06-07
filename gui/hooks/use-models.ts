@@ -11,8 +11,8 @@ export interface ModelInfo {
 
 export function useModels() {
   const [models, setModels] = useState<ModelInfo[]>([]);
-  const [defaultModel, setDefaultModel] = useState("zai-glm-5.1");
-  const [selectedModel, setSelectedModel] = useState("zai-glm-5.1");
+  const [defaultModel, setDefaultModel] = useState("zai-glm-5-turbo");
+  const [selectedModel, setSelectedModel] = useState("zai-glm-5-turbo");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,8 +20,9 @@ export function useModels() {
       .then((res) => res.json())
       .then((data) => {
         setModels(data.models || []);
-        setDefaultModel(data.defaultModel || "zai-glm-5.1");
-        setSelectedModel(data.defaultModel || "zai-glm-5.1");
+        const def = data.defaultModel || "zai-glm-5-turbo";
+        setDefaultModel(def);
+        setSelectedModel(def);
       })
       .catch((err) => console.error("Failed to fetch models:", err))
       .finally(() => setLoading(false));
