@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { CopilotChat } from "@copilotkit/react-ui";
-import { useCoAgent, useCopilotChatInternal } from "@copilotkit/react-core";
+import { useCoAgent } from "@copilotkit/react-core";
 import { v4 as uuidv4 } from "uuid";
 import Toolbar from "@/components/toolbar";
 import StatusBar from "@/components/status-bar";
@@ -18,7 +18,7 @@ import { useSettings } from "@/hooks/use-settings";
 import { useSessions } from "@/hooks/use-sessions";
 import ChatHistoryViewer from "@/components/chat-history-viewer";
 
-interface ResumedHistoryMessage {
+interface HistoryMessage {
   role: "user" | "assistant";
   content: string;
   timestamp?: string | null;
@@ -27,7 +27,7 @@ interface ResumedHistoryMessage {
 interface ResumedSession {
   sessionId: string;
   workspace: string;
-  messages: ResumedHistoryMessage[];
+  messages: HistoryMessage[];
 }
 
 function downloadBlob(content: string, filename: string, mimeType: string) {
@@ -40,6 +40,65 @@ function downloadBlob(content: string, filename: string, mimeType: string) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/** Scrollable chat history rendered above the live chat input */
+function SessionHistoryBlock({
+  messages,
+  onDismiss,
+}: {
+  messages: HistoryMessage[];
+  onDismiss: () => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div className="session-history-block">
+      <div className="session-history-block-header">
+        <span className="session-history-block-label">
+          Resumed &middot; {messages.length} messages
+        </span>
+        <button className="session-history-block-dismiss" onClick={onDismiss} title="Hide history">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="session-history-block-messages" ref={scrollRef}>
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`session-history-block-msg session-history-block-msg-${msg.role}`}>
+            <div className="session-history-block-msg-avatar">
+              {msg.role === "user" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+              )}
+            </div>
+            <div className="session-history-block-msg-body">
+              <div className="session-history-block-msg-role">
+                {msg.role === "user" ? "You" : "Grok Build"}
+              </div>
+              <div className="session-history-block-msg-content">{msg.content}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="session-history-block-divider">
+        <span>Continue below</span>
+      </div>
+    </div>
+  );
 }
 
 export default function Home() {
@@ -59,11 +118,6 @@ export default function Home() {
 
   const coAgent = useCoAgent({ name: "default" });
 
-  // Access CopilotKit's chat state to inject history messages.
-  // useCopilotChatInternal shares context with CopilotSidebar/CopilotChat (unlike useCopilotChatHeadless_c).
-  const { setMessages } = useCopilotChatInternal();
-
-  // Sync model/cwd/instructions to agent state
   useEffect(() => {
     coAgent.setState({
       model: selectedModel,
@@ -72,29 +126,10 @@ export default function Home() {
     });
   }, [selectedModel, cwd, settings.systemPrompt]);
 
-  // When resumed session history is loaded, inject it into CopilotChat's message state.
-  useEffect(() => {
-    if (resumedSession && resumedSession.messages.length > 0) {
-      // Convert to AG-UI Message format that CopilotKit understands
-      const copilotMessages = resumedSession.messages.map((msg) => ({
-        id: uuidv4(),
-        role: msg.role as "user" | "assistant",
-        content: msg.content,
-        createdAt: new Date(),
-      }));
-      // Delay to ensure CopilotSidebar/CopilotChat has mounted after sessionKey change
-      const timer = setTimeout(() => {
-        setMessages(copilotMessages);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [resumedSession, setMessages]);
-
   const handleNewSession = useCallback(() => {
     setSessionKey(uuidv4());
     setResumedSession(null);
-    setMessages([]);
-  }, [setMessages]);
+  }, []);
 
   const handleResumeSession = useCallback(async (sessionId: string) => {
     const session = sessions.find((s) => s.id === sessionId);
@@ -115,15 +150,12 @@ export default function Home() {
           messages: data.messages || [],
         });
       } else {
-        console.warn("Failed to load session history, resuming anyway");
         setResumedSession(null);
       }
-    } catch (err) {
-      console.warn("Error loading session history:", err);
+    } catch {
       setResumedSession(null);
     } finally {
       setLoadingHistory(false);
-      // Set session key LAST so CopilotChat remounts after history is ready.
       setSessionKey(sessionId);
     }
   }, [sessions, cwd]);
@@ -133,14 +165,8 @@ export default function Home() {
   }, []);
 
   const handleCloseAll = useCallback(() => {
-    if (settingsOpen) {
-      setSettingsOpen(false);
-      return;
-    }
-    if (historyOpen) {
-      setHistoryOpen(false);
-      return;
-    }
+    if (settingsOpen) { setSettingsOpen(false); return; }
+    if (historyOpen) { setHistoryOpen(false); return; }
   }, [settingsOpen, historyOpen]);
 
   useKeyboardShortcuts({
@@ -149,7 +175,6 @@ export default function Home() {
     onClose: handleCloseAll,
   });
 
-  // Chat export
   const handleExportJSON = useCallback(() => {
     try {
       const chatHistory = (window as any).__grokChatMessages || [];
@@ -159,11 +184,7 @@ export default function Home() {
         cwd,
         messages: chatHistory.map((m: any) => ({
           role: m.role || m.sender || "unknown",
-          content: typeof m.content === "string"
-            ? m.content
-            : Array.isArray(m.content)
-            ? m.content.map((c: any) => c.text || c.content || "").join("")
-            : "",
+          content: typeof m.content === "string" ? m.content : Array.isArray(m.content) ? m.content.map((c: any) => c.text || c.content || "").join("") : "",
         })),
       };
       downloadBlob(JSON.stringify(data, null, 2), "chat-export.json", "application/json");
@@ -175,11 +196,7 @@ export default function Home() {
       const chatHistory = (window as any).__grokChatMessages || [];
       const lines = chatHistory.map((m: any) => {
         const role = m.role === "user" || m.sender === "user" ? "You" : "Grok";
-        const content = typeof m.content === "string"
-          ? m.content
-          : Array.isArray(m.content)
-          ? m.content.map((c: any) => c.text || c.content || "").join("")
-          : "";
+        const content = typeof m.content === "string" ? m.content : Array.isArray(m.content) ? m.content.map((c: any) => c.text || c.content || "").join("") : "";
         return `## ${role}\n\n${content}\n`;
       });
       const md = `# Chat Export\n\nExported: ${new Date().toISOString()}\nModel: ${selectedModel}\n\n---\n\n${lines.join("\n---\n\n")}`;
@@ -191,6 +208,8 @@ export default function Home() {
     title: "Grok Build - Z.ai Edition",
     initial: "Hi! I'm Grok Build powered by Z.ai. How can I help?",
   };
+
+  const hasHistory = resumedSession && resumedSession.messages.length > 0;
 
   return (
     <div className="app-container">
@@ -235,9 +254,13 @@ export default function Home() {
             ) : (
               <div className="sidebar-container">
                 {loadingHistory && (
-                  <div className="resumed-history-loading">
-                    <div className="resumed-history-spinner">Loading session history...</div>
-                  </div>
+                  <div className="session-history-block-loading">Loading history...</div>
+                )}
+                {hasHistory && (
+                  <SessionHistoryBlock
+                    messages={resumedSession.messages}
+                    onDismiss={() => setResumedSession(null)}
+                  />
                 )}
                 <CopilotSidebar
                   key={`sidebar-${sessionKey}`}
@@ -255,9 +278,13 @@ export default function Home() {
           {isFullscreen ? (
             <div className="fullscreen-chat">
               {loadingHistory && (
-                <div className="resumed-history-loading">
-                  <div className="resumed-history-spinner">Loading session history...</div>
-                </div>
+                <div className="session-history-block-loading">Loading history...</div>
+              )}
+              {hasHistory && (
+                <SessionHistoryBlock
+                  messages={resumedSession.messages}
+                  onDismiss={() => setResumedSession(null)}
+                />
               )}
               <CopilotChat
                 key={`chat-${sessionKey}`}
@@ -276,7 +303,7 @@ export default function Home() {
                   <div className="info-card">
                     <div className="info-icon">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" strokeWidth="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                       </svg>
                     </div>
                     <h3>{models.length} Models</h3>
@@ -285,8 +312,8 @@ export default function Home() {
                   <div className="info-card">
                     <div className="info-icon">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" strokeWidth="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2"/>
-                        <path d="M8 21h8M12 17v4"/>
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M8 21h8M12 17v4" />
                       </svg>
                     </div>
                     <h3>Local GUI</h3>
@@ -295,7 +322,7 @@ export default function Home() {
                   <div className="info-card">
                     <div className="info-icon">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" strokeWidth="2">
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                       </svg>
                     </div>
                     <h3>Streaming</h3>
