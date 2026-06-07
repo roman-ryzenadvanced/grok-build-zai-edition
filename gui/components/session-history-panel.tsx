@@ -98,9 +98,12 @@ export default function SessionHistoryPanel({
             >
               <div className="session-card-content">
                 <div className="session-card-title">
-                  {session.id.length > 24
-                    ? session.id.substring(0, 24) + "..."
-                    : session.id}
+                  {(() => {
+                    const decoded = (() => {
+                      try { return decodeURIComponent(session.id); } catch { return session.id; }
+                    })();
+                    return decoded.length > 32 ? decoded.substring(0, 32) + "..." : decoded;
+                  })()}
                 </div>
                 <div className="session-card-meta">
                   <span>{relativeTime(session.modified)}</span>
