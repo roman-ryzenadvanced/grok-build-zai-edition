@@ -172,12 +172,16 @@ html, body {
   min-width: 350px;
   border-right: 1px solid var(--border);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
 /* Override CopilotKit sidebar styles for dark theme */
 .copilotKitSidebar {
   background: var(--bg-primary) !important;
+  flex: 1;
+  min-height: 0;
 }
 
 .copilotKitSidebar .copilotKitChatContainer,
@@ -246,12 +250,20 @@ html, body {
 .fullscreen-chat {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.fullscreen-chat .copilotKitChatContainer {
+  flex: 1;
+  min-height: 0;
 }
 
 .fullscreen-chat .copilotKitChatContainer {
   max-width: 900px;
   margin: 0 auto;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ============ Workspace View ============ */
