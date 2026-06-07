@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readdirSync, statSync } from "fs";
+import { readdirSync, statSync, rmSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 
@@ -79,4 +79,61 @@ export async function POST(request: NextRequest) {
     { error: "Invalid action. Use 'new' or 'resume'" },
     { status: 400 }
   );
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { sessionId } = body;
+
+    if (!sessionId || typeof sessionId !== "string") {
+      return NextResponse.json(
+        { error: "sessionId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Safety: only delete within SESSIONS_DIR, no path traversal
+    const normalized = sessionId.replace(/\.\./g, "").replace(/[/\\]/g, "");
+    if (!normalized) {
+      return NextResponse.json(
+        { error: "Invalid sessionId" },
+        { status: 400 }
+      );
+    }
+
+    const targetPath = join(SESSIONS_DIR, normalized);
+
+    // Verify the target is within SESSIONS_DIR
+    if (!targetPath.startsWith(SESSIONS_DIR)) {
+      return NextResponse.json(
+        { error: "Invalid sessionId" },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const stat = statSync(targetPath);
+      if (!stat.isDirectory()) {
+        return NextResponse.json(
+          { error: "Session not found" },
+          { status: 404 }
+        );
+      }
+    } catch {
+      return NextResponse.json(
+        { error: "Session not found" },
+        { status: 404 }
+      );
+    }
+
+    rmSync(targetPath, { recursive: true, force: true });
+
+    return NextResponse.json({ success: true, deleted: normalized });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete session", message: (error as Error).message },
+      { status: 500 }
+    );
+  }
 }

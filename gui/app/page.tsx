@@ -6,29 +6,121 @@ import { useCoAgent } from "@copilotkit/react-core";
 import { v4 as uuidv4 } from "uuid";
 import Toolbar from "@/components/toolbar";
 import StatusBar from "@/components/status-bar";
+import SessionHistoryPanel from "@/components/session-history-panel";
+import SettingsPanel from "@/components/settings-panel";
+import CustomAssistantMessage from "@/components/custom-assistant-message";
 import { useModels } from "@/hooks/use-models";
 import { useFullscreen } from "@/hooks/use-fullscreen";
 import { useCwd } from "@/hooks/use-cwd";
+import { useConnectionStatus } from "@/hooks/use-connection-status";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useSettings } from "@/hooks/use-settings";
+import { useSessions } from "@/hooks/use-sessions";
+
+function downloadBlob(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 export default function Home() {
   const { models, selectedModel, setSelectedModel, loading } = useModels();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { cwd, setCwd } = useCwd();
   const [sessionKey, setSessionKey] = useState(() => uuidv4());
-  const [connected, setConnected] = useState(true);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // Get the agent and sync our model/cwd state to it
-  const { agent } = useCoAgent({ name: "default" });
+  const { status: connectionStatus, latency } = useConnectionStatus();
+  const { settings, updateSettings, resetSettings } = useSettings();
+  const { sessions, loading: sessionsLoading, refresh: refreshSessions, deleteSession } = useSessions();
 
+  const coAgent = useCoAgent({ name: "default" });
+
+  // Sync model/cwd/instructions to agent state
   useEffect(() => {
-    if (agent && selectedModel) {
-      agent.setState({ model: selectedModel, cwd: cwd });
-    }
-  }, [agent, selectedModel, cwd]);
+    coAgent.setState({
+      model: selectedModel,
+      cwd,
+      instructions: settings.systemPrompt,
+    });
+  }, [selectedModel, cwd, settings.systemPrompt]);
 
   const handleNewSession = useCallback(() => {
     setSessionKey(uuidv4());
   }, []);
+
+  const handleResumeSession = useCallback((sessionId: string) => {
+    // Set the session key to the resumed session ID so the CLI uses -s <sessionId>
+    setSessionKey(sessionId);
+    setHistoryOpen(false);
+  }, []);
+
+  const handleCloseAll = useCallback(() => {
+    if (settingsOpen) {
+      setSettingsOpen(false);
+      return;
+    }
+    if (historyOpen) {
+      setHistoryOpen(false);
+      return;
+    }
+  }, [settingsOpen, historyOpen]);
+
+  useKeyboardShortcuts({
+    onNewSession: handleNewSession,
+    onToggleFullscreen: toggleFullscreen,
+    onClose: handleCloseAll,
+  });
+
+  // Chat export
+  const handleExportJSON = useCallback(() => {
+    try {
+      const chatHistory = (window as any).__grokChatMessages || [];
+      const data = {
+        exportedAt: new Date().toISOString(),
+        model: selectedModel,
+        cwd,
+        messages: chatHistory.map((m: any) => ({
+          role: m.role || m.sender || "unknown",
+          content: typeof m.content === "string"
+            ? m.content
+            : Array.isArray(m.content)
+            ? m.content.map((c: any) => c.text || c.content || "").join("")
+            : "",
+        })),
+      };
+      downloadBlob(JSON.stringify(data, null, 2), "chat-export.json", "application/json");
+    } catch {}
+  }, [selectedModel, cwd]);
+
+  const handleExportMarkdown = useCallback(() => {
+    try {
+      const chatHistory = (window as any).__grokChatMessages || [];
+      const lines = chatHistory.map((m: any) => {
+        const role = m.role === "user" || m.sender === "user" ? "You" : "Grok";
+        const content = typeof m.content === "string"
+          ? m.content
+          : Array.isArray(m.content)
+          ? m.content.map((c: any) => c.text || c.content || "").join("")
+          : "";
+        return `## ${role}\n\n${content}\n`;
+      });
+      const md = `# Chat Export\n\nExported: ${new Date().toISOString()}\nModel: ${selectedModel}\n\n---\n\n${lines.join("\n---\n\n")}`;
+      downloadBlob(md, "chat-export.md", "text/markdown");
+    } catch {}
+  }, [selectedModel, cwd]);
+
+  const chatLabels = {
+    title: "Grok Build - Z.ai Edition",
+    initial: "Hi! I'm Grok Build powered by Z.ai. How can I help?",
+  };
 
   return (
     <div className="app-container">
@@ -41,20 +133,35 @@ export default function Home() {
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
         onNewSession={handleNewSession}
+        onToggleHistory={() => setHistoryOpen(!historyOpen)}
+        onToggleSettings={() => setSettingsOpen(!settingsOpen)}
+        historyOpen={historyOpen}
+        settingsOpen={settingsOpen}
       />
 
       <div className="app-main">
         {!isFullscreen && (
-          <div className="sidebar-container">
-            <CopilotSidebar
-              key={`sidebar-${sessionKey}`}
-              labels={{
-                title: "Grok Build - Z.ai Edition",
-                initial: "Hi! I'm Grok Build powered by Z.ai. How can I help?",
-              }}
-              defaultOpen={true}
+          <>
+            <SessionHistoryPanel
+              isOpen={historyOpen}
+              onToggle={() => setHistoryOpen(false)}
+              sessions={sessions}
+              loading={sessionsLoading}
+              currentSessionId={sessionKey}
+              onResumeSession={handleResumeSession}
+              onDeleteSession={deleteSession}
+              onRefresh={refreshSessions}
             />
-          </div>
+            <div className="sidebar-container">
+              <CopilotSidebar
+                key={`sidebar-${sessionKey}`}
+                labels={chatLabels}
+                defaultOpen={true}
+                AssistantMessage={CustomAssistantMessage}
+                instructions={settings.systemPrompt || undefined}
+              />
+            </div>
+          </>
         )}
 
         <div className={`main-content ${isFullscreen ? "fullscreen" : ""}`}>
@@ -62,10 +169,8 @@ export default function Home() {
             <div className="fullscreen-chat">
               <CopilotChat
                 key={`chat-${sessionKey}`}
-                labels={{
-                  title: "Grok Build - Z.ai Edition",
-                  initial: "Hi! I'm Grok Build powered by Z.ai. How can I help?",
-                }}
+                labels={chatLabels}
+                instructions={settings.systemPrompt || undefined}
               />
             </div>
           ) : (
@@ -114,10 +219,22 @@ export default function Home() {
         </div>
       </div>
 
+      <SettingsPanel
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={settings}
+        onSettingsChange={updateSettings}
+        onResetSettings={resetSettings}
+        onExportJSON={handleExportJSON}
+        onExportMarkdown={handleExportMarkdown}
+        onClearChat={handleNewSession}
+      />
+
       <StatusBar
         model={selectedModel}
         cwd={cwd}
-        connected={connected}
+        status={connectionStatus}
+        latency={latency}
       />
     </div>
   );

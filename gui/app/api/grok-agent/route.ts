@@ -65,12 +65,13 @@ function extractPrompt(body: any): string {
   return "";
 }
 
-function extractState(body: any): { model: string; cwd: string } {
+function extractState(body: any): { model: string; cwd: string; instructions: string } {
   const state = body.state || {};
   const forwarded = body.forwardedProps?.state || body.forwardedProps || {};
   return {
     model: forwarded.model || state.model || "zai-glm-5-turbo",
     cwd: forwarded.cwd || state.cwd || process.env.HOME || "/home/roman",
+    instructions: forwarded.instructions || state.instructions || "",
   };
 }
 
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     const { threadId, runId } = body;
     const prompt = extractPrompt(body);
-    const { model, cwd } = extractState(body);
+    const { model, cwd, instructions } = extractState(body);
 
     if (!prompt) {
       // Dump full body for debugging
@@ -115,13 +116,17 @@ export async function POST(request: NextRequest) {
     const effectiveThreadId = threadId || uuidv4();
     const effectiveRunId = runId || uuidv4();
 
-    console.log("[grok-agent] Prompt:", prompt.substring(0, 100), "| Model:", model);
+    const fullPrompt = instructions ? `[${instructions}]
+
+${prompt}` : prompt;
+
+    console.log("[grok-agent] Prompt:", fullPrompt.substring(0, 100), "| Model:", model);
 
     const abortController = new AbortController();
     request.signal?.addEventListener("abort", () => abortController.abort());
 
     const grokEvents = runGrok(
-      { prompt, model, cwd, sessionId: effectiveThreadId, yolo: true },
+      { prompt: fullPrompt, model, cwd, sessionId: effectiveThreadId, yolo: true },
       abortController.signal
     );
 

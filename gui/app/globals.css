@@ -456,3 +456,521 @@ html, body {
   color: var(--accent) !important;
   font-family: "SF Mono", "Fira Code", "Fira Mono", monospace !important;
 }
+
+/* ============ Connection Status Animations ============ */
+
+.status-dot.connecting {
+  background: var(--warning);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.status-latency {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-left: 2px;
+}
+
+/* ============ Message Actions (Copy + Retry) ============ */
+
+.message-wrapper {
+  position: relative;
+}
+
+.message-wrapper:hover .message-actions {
+  opacity: 1;
+}
+
+.message-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.message-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.message-action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.message-action-label {
+  font-size: 11px;
+}
+
+/* ============ Toolbar Active State ============ */
+
+.toolbar-btn-icon {
+  padding: 4px 6px;
+}
+
+.toolbar-btn-active {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+}
+
+.toolbar-btn-label {
+  font-size: 12px;
+}
+
+/* ============ Settings Panel ============ */
+
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+}
+
+.settings-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 340px;
+  height: 100vh;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideInRight 0.2s ease-out;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+}
+
+.settings-close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.settings-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.settings-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 8px 0;
+}
+
+.settings-textarea {
+  width: 100%;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 13px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  resize: vertical;
+  outline: none;
+  line-height: 1.5;
+}
+
+.settings-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.15);
+}
+
+.settings-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.settings-btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.settings-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.settings-btn-danger {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.settings-btn-danger:hover {
+  background: rgba(248, 81, 73, 0.1);
+}
+
+.settings-confirm p {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.settings-theme-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-theme-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.settings-theme-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.settings-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.settings-reset-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.settings-reset-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ============ Session History Panel ============ */
+
+.session-history-panel {
+  width: 280px;
+  min-width: 280px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  animation: slideInLeft 0.2s ease-out;
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.session-history-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.session-history-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.session-history-title-row h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.session-history-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.session-history-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+}
+
+.session-history-icon-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.session-search {
+  width: 100%;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  outline: none;
+}
+
+.session-search:focus {
+  border-color: var(--accent);
+}
+
+.session-search::placeholder {
+  color: var(--text-muted);
+}
+
+.session-history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.session-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 24px 12px;
+}
+
+.session-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.1s;
+  margin-bottom: 2px;
+}
+
+.session-card:hover {
+  background: var(--bg-tertiary);
+}
+
+.session-card-active {
+  background: var(--bg-tertiary);
+  border-left: 2px solid var(--accent);
+}
+
+.session-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-card-title {
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.session-card-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.session-card-actions {
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+
+.session-card-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.session-card:hover .session-card-delete {
+  opacity: 1;
+}
+
+.session-card-delete:hover {
+  color: var(--error);
+  background: rgba(248, 81, 73, 0.1);
+}
+
+.session-delete-confirm {
+  display: flex;
+  gap: 4px;
+}
+
+.session-delete-yes {
+  background: var(--error);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.session-delete-no {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.session-history-footer {
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.session-count {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ============ Responsive / Mobile Layout ============ */
+
+@media (max-width: 768px) {
+  .app-main {
+    flex-direction: column;
+  }
+
+  .session-history-panel {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    bottom: 28px;
+    width: 280px;
+    z-index: 150;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .sidebar-container {
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .main-content:not(.fullscreen) {
+    display: none;
+  }
+
+  .main-content.fullscreen {
+    display: flex;
+  }
+
+  .toolbar-center {
+    display: none;
+  }
+
+  .toolbar {
+    padding: 0 8px;
+  }
+
+  .toolbar-btn-label {
+    display: none;
+  }
+
+  .settings-panel {
+    width: 100%;
+  }
+
+  .workspace-view {
+    display: none;
+  }
+
+  .workspace-info {
+    grid-template-columns: 1fr;
+  }
+}
