@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-06-06
+
+### Added
+
+- **Local Web GUI**: Full-featured web-based chat interface built with [CopilotKit](https://github.com/CopilotKit/CopilotKit)
+  - Next.js 15 App Router + TypeScript frontend
+  - CopilotSidebar persistent chat + toggleable fullscreen mode
+  - Real-time streaming responses via AG-UI SSE protocol
+  - Model selector to switch between all 8 Z.ai GLM models
+  - Working directory picker for Grok file operations
+  - Session management (create new / resume existing)
+  - Thought panel to view Grok's reasoning process
+  - Dark "grokday" theme with custom CSS overrides
+  - Grok CLI runner backend spawning headless `grok` subprocess with `--output-format streaming-json`
+  - AG-UI event bridge translating Grok NDJSON stream to AG-UI SSE events
+  - Config parser reading models from `~/.grok/config.toml`
+- **API Routes**:
+  - `/api/grok-agent` — AG-UI SSE endpoint (main chat backend)
+  - `/api/grok-models` — Model list from config.toml
+  - `/api/grok-sessions` — Session list/create/resume
+- **GUI Documentation**: Dedicated README in `gui/` directory
+- **Screenshot**: Web GUI screenshot added to `docs/screenshots/`
+
+### Technical Details
+
+The GUI uses CopilotKit's `runtimeUrl` prop to connect to a custom Next.js API route that implements the AG-UI protocol. The backend spawns the Grok CLI in headless mode with streaming JSON output, parses NDJSON events (text, thought, end), and transforms them to AG-UI SSE events (RUN_STARTED, TEXT_MESSAGE_START/CONTENT/END, RUN_FINISHED, CUSTOM). This architecture requires no modifications to the Grok CLI binary — it uses the officially supported `--output-format streaming-json` flag.
+
 ## [1.0.0] - 2026-06-06
 
 ### Added

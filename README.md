@@ -45,6 +45,8 @@ By taking advantage of Z.ai's OpenAI-compatible API endpoints, you get state-of-
   <p><i>A seamless, high-performance coding experience directly in your terminal.</i></p>
 </div>
 
+**🆕 New in v1.1:** A full-featured **local web GUI** built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) — see the [Web GUI](#-web-gui) section below.
+
 ---
 
 ## ⚡ Supported Models & Custom AI Providers
@@ -134,6 +136,46 @@ grok -p "Fix all lint errors" --model zai-glm-5 --always-approve
 
 ---
 
+## 🖥️ Web GUI
+
+A local web-based chat interface for Grok Build powered by CopilotKit and Next.js.
+
+![Grok Web GUI](docs/screenshots/grok-web-gui.png)
+
+### GUI Features
+
+- **CopilotSidebar** — persistent chat sidebar with quick access
+- **Fullscreen mode** — toggle to a full-screen chat view
+- **Model selector** — switch between all 8 Z.ai GLM models on-the-fly
+- **Working directory picker** — set the CWD for Grok's file operations
+- **Session management** — create new sessions or resume previous ones
+- **Thought panel** — view Grok's reasoning/thinking process
+- **Dark "grokday" theme** — custom dark theme matching the Grok aesthetic
+- **Streaming responses** — real-time SSE streaming via AG-UI protocol
+
+### GUI Quick Start
+
+```bash
+# Navigate to the gui directory
+cd gui
+
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+# Open http://localhost:3000 in your browser
+```
+
+### GUI Tech Stack
+
+- [Next.js 15](https://nextjs.org/) (App Router + TypeScript)
+- [CopilotKit](https://github.com/CopilotKit/CopilotKit) (React AI chat components)
+- [AG-UI Protocol](https://github.com/ag-ui-protocol) (Agent-to-UI SSE streaming)
+- Grok CLI headless mode (`--output-format streaming-json`) as the AI backend
+
+See [gui/README.md](gui/README.md) for detailed GUI documentation.
+
 ## 🔧 Configuration & Architecture
 
 ### Configuration
@@ -172,6 +214,7 @@ Dive deeper into the ecosystem:
 | ❓ **[FAQ](docs/faq.md)** | Frequently asked questions |
 | 🚑 **[Troubleshooting](docs/troubleshooting.md)** | Common issues and solutions |
 | 📝 **[Changelog](CHANGELOG.md)** | Version history and upcoming features |
+| 🖥️ **[Web GUI Guide](gui/README.md)** | Local web GUI documentation |
 
 ---
 
