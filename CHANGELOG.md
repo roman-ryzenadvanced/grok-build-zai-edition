@@ -5,32 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-06-06
+## [2.0.0] - 2026-06-06
+
+### Changed
+
+- **🔄 Web GUI Replaced**: Complete replacement of Next.js/CopilotKit-based web GUI with **[Odysseus](https://github.com/pewdiepie-archdaemon/odysseus)** — a full-featured FastAPI/Python AI workspace
+  - **Old stack removed**: Next.js 15, CopilotKit AG-UI protocol, TypeScript frontend, npm/node build toolchain
+  - **New stack added**:
+    - Python 3.11+ / FastAPI async web framework
+    - Uvicorn ASGI server (default port 3000)
+    - SQLAlchemy ORM with SQLite persistence
+    - Static HTML/CSS/JS frontend (zero Node.js dependency)
+    - OpenAI-compatible `/v1/chat/completions` API integration
+    - MCP (Model Context Protocol) for extensible tool use
 
 ### Added
 
-- **Local Web GUI**: Full-featured web-based chat interface built with [CopilotKit](https://github.com/CopilotKit/CopilotKit)
-  - Next.js 15 App Router + TypeScript frontend
-  - CopilotSidebar persistent chat + toggleable fullscreen mode
-  - Real-time streaming responses via AG-UI SSE protocol
-  - Model selector to switch between all 8 Z.ai GLM models
-  - Working directory picker for Grok file operations
-  - Session management (create new / resume existing)
-  - Thought panel to view Grok's reasoning process
-  - Dark "grokday" theme with custom CSS overrides
-  - Grok CLI runner backend spawning headless `grok` subprocess with `--output-format streaming-json`
-  - AG-UI event bridge translating Grok NDJSON stream to AG-UI SSE events
-  - Config parser reading models from `~/.grok/config.toml`
-- **API Routes**:
-  - `/api/grok-agent` — AG-UI SSE endpoint (main chat backend)
-  - `/api/grok-models` — Model list from config.toml
-  - `/api/grok-sessions` — Session list/create/resume
-- **GUI Documentation**: Dedicated README in `gui/` directory
-- **Screenshot**: Web GUI screenshot added to `docs/screenshots/`
+- **Odysseus Chat UI Features**:
+  - Multi-model chat with any OpenAI-compatible provider (Z.ai GLM, Ollama, OpenRouter, etc.)
+  - Agent mode with built-in tools (MCP, shell, files, web search, memory/skills)
+  - Deep Research — multi-step source gathering + visual synthesis reports
+  - Document editor with AI assistance (markdown, HTML, CSV, syntax highlighting)
+  - Session management with persistent chat history in SQLite
+  - Streaming responses via Server-Sent Events (SSE)
+  - Mobile-friendly responsive design + PWA install support
+  - Dark/Light themes with built-in theme editor
+  - File uploads (vision analysis, PDF parsing)
+  - Memory & Skills system for persistent agent context
+- **Model Endpoints System**: Configure Z.ai (or any provider) via Odysseus Settings → Endpoints — stores API keys, base URLs, and model lists in SQLite `model_endpoints` table
+- **GUI Quick Start**: Python venv + pip + uvicorn workflow (no npm required)
+- **Ubuntu Desktop Shortcut**: `.desktop` launcher at `~/.local/share/applications/odysseus-gui.desktop` for one-click server start + browser open
+- **Screenshot**: New Odysseus GUI screenshot at `docs/screenshots/odysseus-gui.png`
+- **Grok-Odysseus Sync Documentation**: Architecture diagram and comparison table showing how both interfaces share the same Z.ai API endpoint
+
+### Grok Build ↔ Odysseus Sync Architecture
+
+Both interfaces now share the same Z.ai API endpoint:
+
+```
+Browser → Odysseus (FastAPI:3000) → Z.ai API (GLM models)
+Terminal → Grok CLI (config.toml) → Z.ai API (GLM models)
+```
+
+| Feature | Grok Build CLI | Odysseus Web GUI |
+|---------|---------------|------------------|
+| Interface | Terminal (TUI) | Browser (Web UI) |
+| AI Backend | Z.ai (`config.toml`) | Z.ai (SQLite endpoints) |
+| Models | `~/.grok/config.toml` | `model_endpoints` table |
+| Streaming | NDJSON stdout | HTTP SSE |
+| Tool Use | Built-in agent tools | MCP + built-in tools |
+| Session Mgmt | `~/.grok/sessions/` | SQLite `app.db` |
+| Best For | Coding, file ops, git work | Chat, research, documents |
+
+### Removed
+
+- All Next.js/CopilotKit source code (backed up as `gui-nextjs-backup/`)
+- AG-UI SSE event bridge (`api/grok-agent` route)
+- Grok CLI subprocess spawner backend
+- npm/package.json build dependencies
+- CopilotSidebar and fullscreen toggle components
+- Custom "grokday" CSS theme overrides
 
 ### Technical Details
 
-The GUI uses CopilotKit's `runtimeUrl` prop to connect to a custom Next.js API route that implements the AG-UI protocol. The backend spawns the Grok CLI in headless mode with streaming JSON output, parses NDJSON events (text, thought, end), and transforms them to AG-UI SSE events (RUN_STARTED, TEXT_MESSAGE_START/CONTENT/END, RUN_FINISHED, CUSTOM). This architecture requires no modifications to the Grok CLI binary — it uses the officially supported `--output-format streaming-json` flag.
+Odysseus uses its own Model Endpoints system (SQLite-backed) to configure AI providers independently from Grok CLI's `config.toml`. Both systems point to the same Z.ai OpenAI-compatible endpoint (`https://api.z.ai/api/coding/paas/v4`) but manage models separately. The GUI runs as an independent FastAPI process on port 3000 (configurable via `APP_PORT` in `.env`), while Grok CLI continues to work from the terminal as before.
+
+No changes were made to the core Grok Build CLI or its configuration system. The GUI replacement is purely additive — it adds a web interface alongside the existing terminal experience.
 
 ## [1.0.0] - 2026-06-06
 

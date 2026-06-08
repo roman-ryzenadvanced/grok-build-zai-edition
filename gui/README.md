@@ -1,6 +1,6 @@
-# Odysseus
+# Odysseus — Grok Build Z.ai Edition Web GUI
 
-> **Branch note:** `dev` is the default branch and contains the latest development changes, but it may be unstable. For the more stable curated branch, use [`main`](https://github.com/pewdiepie-archdaemon/odysseus/tree/main).
+> **This is the bundled [Odysseus](https://github.com/pewdiepie-archdaemon/odysseus) instance for the [Grok Build Z.ai Edition](https://github.com/roman-ryzenadvanced/grok-build-zai-edition) project.** It comes pre-configured to work alongside the Grok Build CLI, sharing the same Z.ai API endpoint and GLM models. See the main [README](../README.md) for the full project overview and sync architecture.
 
 ```
 ───────────────────────────────────────────────
@@ -8,9 +8,48 @@
 ───────────────────────────────────────────────
 ```
 
-![Odysseus](docs/odysseus.jpg)
-
 A self-hosted AI workspace -- meant to be the self-hosted version of the UI experience you get from ChatGPT and Claude. But with more jank and fun. Running on your own hardware, with your own data -- local-first, privacy-first, and no trojan.
+
+## 🎯 In This Edition (Grok Build Z.ai)
+
+When used as part of **Grok Build Z.ai Edition**, Odysseus is pre-configured to:
+
+- **Share the same Z.ai API endpoint** as your Grok CLI (`https://api.z.ai/api/coding/paas/v4`)
+- **Access all 8 GLM models** (glm-5, glm-5.1, glm-5.2, glm-5-turbo, glm-5v-turbo, glm-4.7, glm-4.7-flash, glm-4.6v)
+- **Run on port 3000** by default (configurable via `APP_PORT` in `.env`)
+- **Work without authentication** locally (`AUTH_ENABLED=false`, `LOCALHOST_BYPASS=true`) -- change this for network deployments!
+
+### Quick Start (Grok Build Edition)
+
+```bash
+cd gui
+
+# Create virtual environment & install dependencies
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Copy and edit environment config
+cp .env.example .env
+# Set: OPENAI_API_KEY=your-zai-key, APP_PORT=3000
+
+# First-time setup (creates DB, admin account)
+python setup.py
+
+# Start the server
+uvicorn app:app --host 127.0.0.1 --port 3000
+# Open http://localhost:3000
+```
+
+After first launch, go to **Settings → Endpoints** and add:
+| Field | Value |
+|-------|-------|
+| Name | `Z.ai GLM` |
+| Base URL | `https://api.z.ai/api/coding/paas/v4` |
+| API Key | *(your Z.ai token)* |
+| Models | `glm-5`, `glm-5.1`, `glm-5.2`, `glm-5-turbo`, `glm-5v-turbo`, `glm-4.7`, `glm-4.7-flash`, `glm-4.6v` |
+
+---
 
 ## Features
   - **Chat** -- chat with any local model or API; adding them is super simple.<br>　<sub>vLLM · llama.cpp · Ollama · OpenRouter · OpenAI · GitHub Copilot</sub>
@@ -45,7 +84,7 @@ A full, hover-to-play tour lives on the landing page (`docs/index.html`).
 
 </details>
 
-## Quick Start
+## Quick Start (Standalone / Upstream)
 
 Defaults work out of the box: clone, run, then configure models/search/email
 inside **Settings**. Only edit `.env` for deployment-level overrides like
@@ -388,9 +427,9 @@ Key settings:
 | `SEARXNG_INSTANCE` | `http://localhost:8080` | SearXNG URL. Docker overrides this to `http://searxng:8080`. |
 | `SEARXNG_SECRET` | generated on first Docker boot | Optional SearXNG cookie/CSRF secret. Leave blank unless you need to pin it. |
 | `APP_BIND` | `127.0.0.1` | Docker Compose host bind address for the web UI. Use `0.0.0.0` only for intentional LAN/reverse-proxy access. |
-| `APP_PORT` | `7000` | Docker Compose host port for the web UI. |
-| `AUTH_ENABLED` | `true` | Enable/disable login |
-| `LOCALHOST_BYPASS` | `false` | Development-only auth bypass for loopback requests. Keep false for shared/network deployments. |
+| `APP_PORT` | `7000` | Docker Compose host port for the web UI. (**Grok Build Edition uses 3000**) |
+| `AUTH_ENABLED` | `true` | Enable/disable login. (**Grok Build Edition defaults to false**) |
+| `LOCALHOST_BYPASS` | `false` | Development-only auth bypass for loopback requests. (**Grok Build Edition defaults to true**) |
 | `SECURE_COOKIES` | `false` | Set true when serving Odysseus through HTTPS at a trusted proxy or private access gateway. |
 | `DATABASE_URL` | `sqlite:///./data/app.db` | Database connection string |
 | `CHROMADB_HOST` | `localhost` | ChromaDB host for vector memory. Docker overrides this to `chromadb`. |
@@ -424,30 +463,9 @@ docs/      landing page (index.html) + preview clips
 All user data lives in `data/` (gitignored): `app.db` (sessions, messages, documents),
 `memory.json`, `presets.json`, `uploads/`, `personal_docs/`, `chroma/`, `settings.json`.
 
-## Star History
-
-<a href="https://www.star-history.com/?repos=pewdiepie-archdaemon%2Fodysseus&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=pewdiepie-archdaemon/odysseus&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=pewdiepie-archdaemon/odysseus&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=pewdiepie-archdaemon/odysseus&type=date&legend=top-left" />
- </picture>
-</a>
-
 ## License
 MIT -- see [LICENSE](LICENSE) and [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md).
 
-```
-                                  |
-                                 |||
-                                |||||
-                  |    |    |   |||||||
-                 )_)  )_)  )_)   ~|~
-                )___))___))___)\  |
-               )____)____)_____)\\|
-             _____|____|____|_____\\\__
-             \                       /
-       ~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~
-               ~^~  all aboard!  ~^~
-       ~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~
-```
+---
+
+*Integrated into [Grok Build Z.ai Edition](https://github.com/roman-ryzenadvanced/grok-build-zai-edition) — see main [README](../README.md) for project details.*

@@ -5,12 +5,12 @@
 # 🚀 Grok Build Z.ai Edition
 **Use Any AI Provider with Grok Build CLI — No Subscription Required!**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=for-the-badge&logo=appveyor)](VERSION)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg?style=for-the-badge&logo=appveyor)](VERSION)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-8%20GLM-orange.svg?style=for-the-badge&logo=openai)](docs/models.md)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg?style=for-the-badge&logo=linux)](#installation)
 
-Unlock the full power of your **Grok Build CLI** using **ANY OpenAI-compatible AI provider** (such as DeepSeek, Anthropic, or local LLMs like Ollama), or take advantage of our perfectly tuned **Z.ai’s state-of-the-art GLM models**. Bypass expensive default subscriptions and leverage custom coding plans locally.
+Unlock the full power of your **Grok Build CLI** using **ANY OpenAI-compatible AI provider** (such as DeepSeek, Anthropic, or local LLMs like Ollama), or take advantage of our perfectly tuned **Z.ai's state-of-the-art GLM models**. Bypass expensive default subscriptions and leverage custom coding plans locally.
 
 ---
 
@@ -18,7 +18,7 @@ Unlock the full power of your **Grok Build CLI** using **ANY OpenAI-compatible A
 <table align="center">
   <tr>
     <td align="center" width="9999">
-      <h3>🔥 Unlock 10% OFF Z.ai Coding Plans! 🔥</h3>
+      <h3>�� Unlock 10% OFF Z.ai Coding Plans! 🔥</h3>
       <p>Supercharge your Grok Build CLI with ultra-fast, premium GLM models at a discount.</p>
       <p>Use Invite Code: <b><code>ROK78RJKNW</code></b></p>
       <a href="https://z.ai/subscribe?ic=ROK78RJKNW">
@@ -45,7 +45,7 @@ By taking advantage of Z.ai's OpenAI-compatible API endpoints, you get state-of-
   <p><i>A seamless, high-performance coding experience directly in your terminal.</i></p>
 </div>
 
-**🆕 New in v1.1:** A full-featured **local web GUI** built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) — see the [Web GUI](#-web-gui) section below.
+**🆕 New in v2.0:** A complete **local web GUI** powered by [Odysseus](https://github.com/pewdiepie-archdaemon/odysseus) — see the [Web GUI](#-web-gui-odysseus) section below.
 
 ---
 
@@ -136,22 +136,76 @@ grok -p "Fix all lint errors" --model zai-glm-5 --always-approve
 
 ---
 
-## 🖥️ Web GUI
+## 🖥️ Web GUI (Odysseus)
 
-A local web-based chat interface for Grok Build powered by CopilotKit and Next.js.
+A powerful, self-hosted web chat interface powered by **[Odysseus](https://github.com/pewdiepie-archdaemon/odysseus)** — a FastAPI-based AI workspace that replaces the old Next.js/CopilotKit GUI.
 
-![Grok Web GUI](docs/screenshots/grok-web-gui.png)
+![Odysseus Chat GUI](docs/screenshots/odysseus-gui.png)
 
-### GUI Features
+### Why Odysseus?
 
-- **CopilotSidebar** — persistent chat sidebar with quick access
-- **Fullscreen mode** — toggle to a full-screen chat view
-- **Model selector** — switch between all 8 Z.ai GLM models on-the-fly
-- **Working directory picker** — set the CWD for Grok's file operations
-- **Session management** — create new sessions or resume previous ones
-- **Thought panel** — view Grok's reasoning/thinking process
-- **Dark "grokday" theme** — custom dark theme matching the Grok aesthetic
-- **Streaming responses** — real-time SSE streaming via AG-UI protocol
+Odysseus is a full-featured AI workspace (think self-hosted ChatGPT/Claude UI) that integrates seamlessly with Grok Build's OpenAI-compatible API model system. It provides:
+
+- **Multi-model chat** with any OpenAI-compatible provider (Z.ai GLM, Ollama, OpenRouter, etc.)
+- **Agent mode** with tool use (MCP, shell, files, web search, memory)
+- **Deep Research** — multi-step source gathering + visual reports
+- **Document editor** with AI assistance (markdown, HTML, CSV)
+- **Session management** with persistent chat history (SQLite)
+- **Streaming responses** via Server-Sent Events (SSE)
+- **Mobile-friendly** responsive design + PWA support
+- **Dark/Light themes** with a built-in theme editor
+- **File uploads** (vision, PDF parsing)
+- **Memory & Skills** system for persistent agent context
+
+### How It Syncs with Grok Build
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   Your Browser                      │
+│              http://localhost:3000                   │
+│                  (Odysseus Frontend)                 │
+└───────────────────┬─────────────────────────────────┘
+                    │  HTTP / SSE
+                    ▼
+┌─────────────────────────────────────────────────────┐
+│              Odysseus Backend (FastAPI)              │
+│            gui/app.py → uvicorn :3000               │
+│                                                     │
+│  ┌──────────────────────────────────────────┐       │
+│  │        Model Endpoints (SQLite DB)        │       │
+│  │  ┌────────────────────────────────────┐  │       │
+│  │  │  Z.ai GLM Endpoint                 │  │       │
+│  │  │  URL: https://api.z.ai/.../v4     │  │       │
+│  │  │  Models: glm-5, glm-5-turbo, ...   │  │       │
+│  │  └────────────────────────────────────┘  │       │
+│  └──────────────────────────────────────────┘       │
+│                     │                                │
+│         OpenAI-compatible /v1/chat/completions       │
+│                     │                                │
+└─────────────────────┼────────────────────────────────┘
+                      │
+                      ▼
+        ┌───────────────────────────────┐
+        │     Z.ai API (Remote Cloud)    │
+        │   Same endpoint as Grok CLI     │
+        │   https://api.z.ai/api/coding  │
+        │          /paas/v4               │
+        └───────────────────────────────┘
+```
+
+**The key insight:** Both **Grok Build CLI** and **Odysseus Web GUI** share the same Z.ai API endpoint and models. They are two interfaces to the same AI backend:
+
+| Feature | Grok Build CLI | Odysseus Web GUI |
+|---------|---------------|------------------|
+| Interface | Terminal (TUI) | Browser (Web UI) |
+| AI Backend | Z.ai API (`config.toml`) | Z.ai API (Model Endpoints DB) |
+| Models | `~/.grok/config.toml` | SQLite `model_endpoints` table |
+| Streaming | NDJSON stdout | HTTP SSE |
+| Tool Use | Built-in agent tools | MCP + built-in tools |
+| Session Mgmt | `~/.grok/sessions/` | SQLite `app.db` |
+| Best For | Coding, file ops, git work | Chat, research, documents |
+
+When you configure your Z.ai API key in both places, you get a **unified experience** — code in the terminal with Grok, chat/research in the browser with Odysseus, all using the same GLM models.
 
 ### GUI Quick Start
 
@@ -159,22 +213,47 @@ A local web-based chat interface for Grok Build powered by CopilotKit and Next.j
 # Navigate to the gui directory
 cd gui
 
-# Install dependencies
-npm install
+# Create virtual environment & install dependencies
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-# Start the dev server
-npm run dev
+# Copy environment config
+cp .env.example .env
+# Edit .env: set OPENAI_API_KEY=your-zai-key, APP_PORT=3000
+
+# Run first-time setup (creates DB, admin account)
+python setup.py
+
+# Start the server
+uvicorn app:app --host 127.0.0.1 --port 3000
 # Open http://localhost:3000 in your browser
 ```
 
+**Or use Docker:**
+```bash
+cd gui
+cp .env.example .env
+docker compose up -d --build
+# Open http://localhost:7000
+```
+
+After starting, go to **Settings → Endpoints** and add your Z.ai endpoint:
+- **Name:** `Z.ai GLM`
+- **Base URL:** `https://api.z.ai/api/coding/paas/v4`
+- **API Key:** your Z.ai token
+- **Models:** `glm-5`, `glm-5.1`, `glm-5.2`, `glm-5-turbo`, `glm-5v-turbo`, `glm-4.7`, `glm-4.7-flash`, `glm-4.6v`
+
 ### GUI Tech Stack
 
-- [Next.js 15](https://nextjs.org/) (App Router + TypeScript)
-- [CopilotKit](https://github.com/CopilotKit/CopilotKit) (React AI chat components)
-- [AG-UI Protocol](https://github.com/ag-ui-protocol) (Agent-to-UI SSE streaming)
-- Grok CLI headless mode (`--output-format streaming-json`) as the AI backend
+- [FastAPI](https://fastapi.tiangolo.com/) (Python async web framework)
+- [Uvicorn](https://www.uvicorn.org/) (ASGI server)
+- [SQLAlchemy](https://www.sqlalchemy.org/) (ORM / SQLite persistence)
+- Static HTML/CSS/JS frontend (no Node.js build step required!)
+- OpenAI-compatible `/v1/chat/completions` API integration
+- MCP (Model Context Protocol) for extensible tool use
 
-See [gui/README.md](gui/README.md) for detailed GUI documentation.
+See [gui/README.md](gui/README.md) for full Odysseus documentation.
 
 ## 🔧 Configuration & Architecture
 
@@ -198,6 +277,7 @@ api_key = "your-zai-token"
 2. Each model section specifies: `base_url`, `model`, `api_key`, and optional parameters.
 3. The CLI routes API requests to the specified `base_url` instead of the default x.ai endpoint.
 4. Z.ai's API is OpenAI-compatible, meaning all requests work seamlessly natively.
+5. The Odysseus Web GUI uses the same endpoint via its **Model Endpoints** system — add your Z.ai endpoint once in Settings, and it works across all chat sessions.
 
 **No binary modification, reverse engineering, or auth bypass is required.** This is a **fully supported feature** of the CLI.
 
@@ -209,12 +289,12 @@ Dive deeper into the ecosystem:
 
 | Document | Description |
 |----------|-------------|
-| 📖 **[Setup Guide](docs/setup.md)** | Detailed installation and configuration |
+| �� **[Setup Guide](docs/setup.md)** | Detailed installation and configuration |
 | 🧠 **[Models Reference](docs/models.md)** | Complete model documentation and tuning |
 | ❓ **[FAQ](docs/faq.md)** | Frequently asked questions |
 | 🚑 **[Troubleshooting](docs/troubleshooting.md)** | Common issues and solutions |
 | 📝 **[Changelog](CHANGELOG.md)** | Version history and upcoming features |
-| 🖥️ **[Web GUI Guide](gui/README.md)** | Local web GUI documentation |
+| 🖥️ **[Web GUI Guide](gui/README.md)** | Odysseus web GUI documentation |
 
 ---
 
@@ -233,6 +313,14 @@ Dive deeper into the ecosystem:
 **Model not found**
 - *Root Cause*: Model ID mismatch.
 - *Solution*: Run `grok models` to see available models.
+
+**GUI won't start (port already in use)**
+- *Root Cause*: Another process is using port 3000 (or 7000 for Docker).
+- *Solution*: Kill the existing process: `fuser -k 3000/tcp`, or change `APP_PORT` in `.env`.
+
+**GUI shows no models after setup**
+- *Root Cause*: No endpoints configured in Odysseus database.
+- *Solution*: Go to Settings → Endpoints → Add Endpoint with your Z.ai credentials.
 
 *See [docs/troubleshooting.md](docs/troubleshooting.md) for more.*
 </details>
@@ -262,6 +350,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## ⚠️ Disclaimer
 
 This project is **not affiliated with** xAI or Grok Build. It is a community-driven configuration that leverages the CLI's built-in support for custom model endpoints. Use of Z.ai's API is subject to their terms of service.
+
+The web GUI ([Odysseus](https://github.com/pewdiepie-archdaemon/odysseus)) is licensed under the MIT License — see [gui/LICENSE](gui/LICENSE).
 
 ---
 
