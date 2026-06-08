@@ -1,6 +1,72 @@
+# === Python ===
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
+dist/
+build/
+*.whl
+.venv/
+venv/
+env/
+
+# === Secrets & Credentials ===
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets.toml
+credentials.json
+
+# === Databases (contain API keys, sessions, tokens) ===
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+data/
+gui/data/
+
+# === Logs & Debug ===
 *.log
+logs/
+*.log.*
+
+# === OS ===
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# === IDE / Editor ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Backup dirs (untracked) ===
+*-backup/
+*backup*/
+gui-nextjs-backup/
+
+# === Temporary / Runtime ===
+tmp/
+temp/
+.cache/
+uploads/
+personal_docs/
+chroma/
+memory.json
+settings.json
+presets.json
+auth.json
+auth.json.lock
+active_sessions.json
+active_sessions.lock
+
+# === Node.js (legacy GUI remnants) ===
+node_modules/
+.next/
+out/
